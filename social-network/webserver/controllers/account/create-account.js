@@ -2,34 +2,6 @@
 
 const bcrypt = require('bcrypt');
 const Joi = require('joi');
-<<<<<<< HEAD
-const bcrypt = require('bcrypt');
-const uuidV4 = require('uuid/v4');
-const mysql = require ('mysql2/promise');
-const sendgridMail = require('@sendgrid/mail');
-
-sendgridMail.setApiKey(process.env.SENGRID_API_KEY);
-
-// create the connection to database
-let connection = null;
-(async () => {
-  connection = await mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    database: 'socialnetwork',
-    password: 'password',
-  });
-})();
-//simple query
-/*
-connection.query(
-  'SELECT 1 + 1',
-  function(err, results, fields){
-    console.log(results);//result contains rows returned by servers
-    console.log(fields);//fields contains extra metadata about results, if available
-  }
-)*/
-=======
 const sendgridMail = require('@sendgrid/mail');
 const uuidV4 = require('uuid/v4');
 const mysqlPool = require('../../../databases/mysql-pool');
@@ -133,7 +105,6 @@ async function sendEmailRegistration(userEmail, verificationCode) {
 
   return data;
 }
->>>>>>> 0ec70e7420cafcfe74262d0655d753012373c7fe
 
 async function validateSchema(payload) {
   /**
@@ -144,15 +115,8 @@ async function validateSchema(payload) {
    * fullName: String with 3 minimun characters and max 128
    */
   const schema = {
-<<<<<<< HEAD
-    email: Joi.string().email({ minDomainAtoms: 2}).required(),
-    password: Joi.string().regex(/^[a-zA-z0-9]{3,30}$/).required(),
-    // email: rules.email,
-    // password: rules.password,
-=======
     email: Joi.string().email({ minDomainAtoms: 2 }).required(),
     password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required(),
->>>>>>> 0ec70e7420cafcfe74262d0655d753012373c7fe
     // fullName: rules.fullName,
   };
 
@@ -178,84 +142,31 @@ async function create(req, res, next) {
     password,
   } = accountData;
 
+  try {
     /**
-<<<<<<< HEAD
-     * TODO: Insert user into MySQL
-     *  hash the password using bcrypt library
-     */
-    const securePassword = await bcrypt.hash(password,10);
-    const uuid = uuidV4();
-    const now = new Date();
-    const createdAt = now.toISOString().substring(0, 19).replace('T',' ');
-
-    /**
-     * TODO: Insert user into mysql and get the user uuid
-     */
-    try {
-      await connection.query('  insert into users SET ?',{
-        uuid,
-        email,
-        password: securePassword,
-        created_at: createdAt,
-      });
-    } catch (e) {
-      console.error(e);
-      return res.status(409).send(e.message);
-    }
-=======
      * Create the user and send response
      */
     const uuid = await insertUserIntoDatabase(email, password);
     res.status(204).json();
->>>>>>> 0ec70e7420cafcfe74262d0655d753012373c7fe
 
     /**
      * We are going to creaate minimum structure in mongodb
      */
-<<<<<<< HEAD
-    const verificationCode = uuidV4();
-    try {
-      await connection.query('INSERT INTO users_activation SET ?', {
-user_uuid: uuid,
-verification_code: verificationCode,
-created_at: createdAt,
-      });
-    } catch(e) {
-      return res.status(409).send(e.message);
-    }
-    
-=======
     await createUserProfile(uuid);
->>>>>>> 0ec70e7420cafcfe74262d0655d753012373c7fe
 
     /**
      * Generate verification code and send email
      */
     try {
-<<<<<<< HEAD
-      /**
-       * Send email to the user adding the verificationCode in the link
-       */
-      const msg = {
-        to: email,
-        from: {
-          email: 'socialnetwork@yopmail.com',
-          name: 'Social Network :)',
-        },
-        subject: 'Welcome to Hack a Bos Social Network',
-        text: 'Start meeting people of your interests',
-        html: `To confirm the account <a href="http://localhost:8000/api/account/activate?verification_code=${verificationCode}">activate it here</a>`,
-      };
-    
-      const data = await sendgridMail.send(msg);
-      console.log('data',data);
-=======
       const verificationCode = await addVerificationCode(uuid);
       await sendEmailRegistration(email, verificationCode);
->>>>>>> 0ec70e7420cafcfe74262d0655d753012373c7fe
     } catch (e) {
       console.error('Sengrid error', e);
     }
+  } catch (e) {
+    // create error
+    next(e);
+  }
 }
 
 module.exports = create;

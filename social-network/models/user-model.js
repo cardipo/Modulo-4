@@ -9,7 +9,14 @@ const userSchema = new Schema({
     type: String,
     unique: true,
   },
-  friends: [],
+  friends: [{
+    rejectedAt: Date,
+    confirmedAt: Date,
+    createdAt: Date,
+    uuid: String,
+
+  }],
+  
   avatarUrl: String,
   fullName: String,
   preferences: {
@@ -18,8 +25,18 @@ const userSchema = new Schema({
     twitter: String,
     github: String,
     description: String,
+   
   },
 });
+
+userSchema.index(
+  {
+    fullName: 'text',
+    'preferences.linkedIn': 'text',
+    'preferences.twitter': 'text',
+    'preferences.github': 'text',
+  },
+);
 
 const User = mongoose.model('User', userSchema);
 
